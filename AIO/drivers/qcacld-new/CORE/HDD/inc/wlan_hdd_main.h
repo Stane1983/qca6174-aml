@@ -2211,6 +2211,7 @@ struct hdd_context_s
 #ifdef WLAN_SPECTRAL_SCAN
     hdd_spectral_t *hdd_spec;
 #endif
+    struct iw_statistics wstats;
 };
 
 /*---------------------------------------------------------------------------

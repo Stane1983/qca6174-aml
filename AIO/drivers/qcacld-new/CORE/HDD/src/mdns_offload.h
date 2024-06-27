@@ -145,9 +145,9 @@ static inline char *__mdnsOffload_decode_qname(unsigned char *buf,
     unsigned char *p = NULL, *c = NULL;
     uint32_t n = 0, i = 0;
 
-    if (!buf || buf_len < 1 || offset < 1 || offset > buf_len)
+    if (!buf || buf_len < 1 || offset < 0 || offset > buf_len - 1)
         goto err;
-    p = buf + offset - 1;
+    p = buf + offset;
     if (*p == 0)
         goto err;
     qname = (char *)kmalloc(256, GFP_KERNEL);
@@ -159,14 +159,14 @@ static inline char *__mdnsOffload_decode_qname(unsigned char *buf,
     c = (unsigned char *)qname;
     while (*p) {
         if ((*p >> 6) == 0x03) {
-            n = (((*p << 8) | *(p + 1)) & 0x3fff) - 1;
+            n = (((*p << 8) | *(p + 1)) & 0x3fff);
             if (n > (buf_len - 1))
                 goto err;
             p = buf + n;
             continue;
         }
         n = *p;
-        if (p + 1 + n > buf + buf_len - 1)
+        if (p + n > buf + buf_len - 1)
             goto err;
         p++;
         for (i = 0; i < n; i++) {
@@ -393,8 +393,8 @@ VENDOR_CMD_FUNC_IMPL(addProtocolResponses)
         kfree(qname);
         qname = NULL;
     }
-    printk("rawOffloadPacket:\n");
-    __mdnsOffload_dump_msg(pkt_data, pkt_len);
+    //printk("rawOffloadPacket:\n");
+    //__mdnsOffload_dump_msg(pkt_data, pkt_len);
     if (mdns_offload_ops.addProtocolResponses) {
         offloadData.rawOffloadPacketLen = pkt_len;
         offloadData.rawOffloadPacket = pkt_data;

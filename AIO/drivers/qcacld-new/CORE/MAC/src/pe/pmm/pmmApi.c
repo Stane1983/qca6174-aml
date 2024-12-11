@@ -1932,6 +1932,7 @@ void pmmSendWowlAddBcastPtrn(tpAniSirGlobal pMac,  tpSirMsgQ pMsg)
             vos_mem_free(pBcastPtrn);
         pmmLog( pMac, LOGP, FL("Posting WDA_WOWL_ADD_BCAST_PTRN failed, reason=%X"), retCode );
     }
+    vos_mem_free(pBcastPtrn);
     return;
 }
 

@@ -2860,6 +2860,8 @@ eHalStatus csrScanningStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
 				pMsg->type );
 			}
 		}
+		if (roam_info)
+			vos_mem_free(roam_info);
 	}
 	return (status);
 }

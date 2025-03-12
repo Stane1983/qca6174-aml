@@ -3621,7 +3621,7 @@ int qca_request_firmware(const struct firmware **firmware_p,
 #elif defined(CONFIG_YOCTO)
 	sprintf(final_name,"../../etc/wifi/qca6174/%s",name);
 #else
-	sprintf(final_name,"../../../vendor/etc/wifi/qca6174/%s",name);
+	sprintf(final_name,"%s",name);
 #endif
 	return request_firmware(firmware_p, final_name, device);
 #endif

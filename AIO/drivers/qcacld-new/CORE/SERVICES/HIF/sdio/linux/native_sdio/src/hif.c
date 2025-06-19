@@ -994,7 +994,9 @@ static int async_task(void *param)
     set_user_nice(current, -3);
     device = (HIF_DEVICE *)param;
     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: async task\n"));
+#if 0
     set_current_state(TASK_INTERRUPTIBLE);
+#endif
     while(!device->async_shutdown) {
         /* wait for work */
         if (down_interruptible(&device->sem_async) != 0) {

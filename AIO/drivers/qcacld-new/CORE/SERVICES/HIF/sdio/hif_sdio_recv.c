@@ -876,7 +876,10 @@ int rx_completion_task(void *param)
     target = (HTC_TARGET *)device->pTarget;
     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: rx completion task\n"));
 
+#if 0
     set_current_state(TASK_INTERRUPTIBLE);
+#endif
+
     vos_set_cpus_allowed_ptr(current, 1);
 
     while (!device->pRecvTask->rx_completion_shutdown) {

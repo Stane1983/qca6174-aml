@@ -38,6 +38,7 @@
 #ifdef __KERNEL__
 
 #include <linux/version.h>
+#include "wlan_linux_compat.h"
 #include <generated/autoconf.h>
 #include <linux/types.h>
 #include <linux/kernel.h>
@@ -469,14 +470,14 @@ typedef struct ieee80211_cb wbuf_context;
 
 #ifdef ANDROID
 #ifndef err
-#include <errno.h>
+#include <linux/errno.h>
 #define err(_s, args...) do { \
     fprintf(stderr, "%s: line %d ", __FILE__, __LINE__); \
     fprintf(stderr, args); fprintf(stderr, ": %d\n", errno); \
     exit(_s); } while (0)
 #endif
 #else
-#include <err.h>
+#include <linux/err.h>
 #endif
 
 #endif /* __KERNEL__ */

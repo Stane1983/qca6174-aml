@@ -41,9 +41,9 @@
   */
 
 #if !defined  ANI_OS_TYPE_OSX && !defined ANI_OS_TYPE_LINUX && !defined ANI_OS_TYPE_ANDROID
-#include <memory.h> /* For memcpy */
+#include <linux/memory.h> /* For memcpy */
 #include <stdio.h>  /* For _vsnprintf */
-#include <stddef.h> /* For offsetof */
+#include <linux/stddef.h> /* For offsetof */
 #endif
 
 #include <aniGlobal.h>
@@ -118,7 +118,7 @@ typedef struct sIEDefn {
 #ifndef DOT11F_HAVE_LOG_MACROS
 
 #include <stdio.h>
-#include <stdarg.h>
+#include <linux/stdarg.h>
 
 #ifndef DOT11F_LOG_GATE
 #   define DOT11F_LOG_GATE FRLOGW

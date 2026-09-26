@@ -344,7 +344,7 @@ v_UINT_t tx_timer_create_intern_debug( v_PVOID_t pMacGlobal, TX_TIMER *timer_ptr
 
 #ifdef WLAN_DEBUG
     // Store the timer name
-    strlcpy(timer_ptr->timerName, name_ptr, sizeof(timer_ptr->timerName));
+    strscpy(timer_ptr->timerName, name_ptr, sizeof(timer_ptr->timerName));
 #endif // Store the timer name, for Debug build only
 
     status = vos_timer_init_debug( &timer_ptr->vosTimer, VOS_TIMER_TYPE_SW,
@@ -403,7 +403,7 @@ v_UINT_t tx_timer_create_intern( v_PVOID_t pMacGlobal, TX_TIMER *timer_ptr,
 
 #ifdef WLAN_DEBUG
     // Store the timer name
-    strlcpy(timer_ptr->timerName, name_ptr, sizeof(timer_ptr->timerName));
+    strscpy(timer_ptr->timerName, name_ptr, sizeof(timer_ptr->timerName));
 #endif // Store the timer name, for Debug build only
 
     status = vos_timer_init( &timer_ptr->vosTimer, VOS_TIMER_TYPE_SW,

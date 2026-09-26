@@ -25,6 +25,7 @@
  * to the Linux Foundation.
  */
 #include <adf_os_types.h>
+#include "wlan_linux_compat.h"
 #include <adf_os_dma.h>
 #include <adf_os_timer.h>
 #include <adf_os_time.h>

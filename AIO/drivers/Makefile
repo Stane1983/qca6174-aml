@@ -51,6 +51,12 @@ NOSTDINC_FLAGS +=-fno-pic
 TARGET_ALL := qcacld_build
 TARGET_CLEAN :=  qcacld_clean
 MODULE_SYMBOL_DIR :=${CONFIG_KERNEL_SYMBOL_DIR}
+# Only pass extra symbols when that file exists: modpost aborts on a missing
+# KBUILD_EXTRA_SYMBOLS file, and CONFIG_KERNEL_SYMBOL_DIR is unset on 6.12
+# (cfg80211 symbols come from the kernel_build's own Module.symvers there).
+ifneq ($(wildcard $(MODULE_SYMBOL_DIR)/Module.symvers),)
+EXTRA_SYMBOLS_OPT := KBUILD_EXTRA_SYMBOLS=$(MODULE_SYMBOL_DIR)/Module.symvers
+endif
 
 #################################################################################################################################
 all: $(TARGET_ALL)
@@ -61,7 +67,7 @@ clean: $(TARGET_CLEAN)
 # qcacld driver build
 #
 qcacld_build:
-	+$(MAKE) -C ${ATH_QCACLD_TOPDIR} M=$(QCACLD) KBUILD_EXTRA_SYMBOLS=$(MODULE_SYMBOL_DIR)/Module.symvers $(KBUILD_OPTIONS)
+	+$(MAKE) -C ${ATH_QCACLD_TOPDIR} M=$(QCACLD) $(EXTRA_SYMBOLS_OPT) $(KBUILD_OPTIONS)
 
 qcacld_clean:
 	$(MAKE) -C ${ATH_QCACLD_TOPDIR} M=$(QCACLD) clean

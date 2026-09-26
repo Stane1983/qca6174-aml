@@ -26,6 +26,7 @@
  */
 
 #include <linux/mmc/card.h>
+#include "wlan_linux_compat.h"
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/host.h>
 #include <linux/mmc/sdio_func.h>

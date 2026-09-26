@@ -2068,7 +2068,7 @@ static int __iw_get_name(struct net_device *dev,
 			 char *wrqu, char *extra)
 {
 	ENTER();
-	strlcpy(wrqu, "Qcom:802.11n", IFNAMSIZ);
+	strscpy(wrqu, "Qcom:802.11n", IFNAMSIZ);
 	EXIT();
 	return 0;
 }
@@ -3585,7 +3585,7 @@ void hdd_tx_per_hit_cb (void *pCallbackContext)
         return;
     }
     memset(&wrqu, 0, sizeof(wrqu));
-    wrqu.data.length = strlcpy(tx_fail, "TX_FAIL", sizeof(tx_fail));
+    wrqu.data.length = strscpy(tx_fail, "TX_FAIL", sizeof(tx_fail));
     wireless_send_event(pAdapter->dev, IWEVCUSTOM, &wrqu, tx_fail);
 }
 

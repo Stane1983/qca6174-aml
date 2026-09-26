@@ -1594,7 +1594,7 @@ void ol_tx_hl_send_all_tcp_ack(struct ol_txrx_vdev_t *vdev)
  *
  * Return: none
  */
-void tcp_del_ack_tasklet(unsigned long data)
+void tcp_del_ack_tasklet(void *data)
 {
 	struct ol_txrx_vdev_t *vdev = (struct ol_txrx_vdev_t *)data;
 

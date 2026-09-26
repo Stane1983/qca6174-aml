@@ -15,6 +15,7 @@
  */
 
 #include <linux/gpio.h>
+#include "wlan_linux_compat.h"
 #include <hif_oob.h>
 #include <vos_api.h>
 #if defined(HIF_SDIO)

@@ -27,6 +27,7 @@
 
 #define ATH_MODULE_NAME hif
 #include <adf_os_types.h>
+#include "wlan_linux_compat.h"
 #include <adf_os_dma.h>
 #include <adf_os_timer.h>
 #include <adf_os_time.h>

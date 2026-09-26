@@ -37,6 +37,7 @@ Include Files
 ------------------------------------------------------------------------*/
 #ifdef IPA_OFFLOAD
 #include <wlan_hdd_includes.h>
+#include "wlan_linux_compat.h"
 #include <wlan_hdd_ipa.h>
 
 #include <linux/etherdevice.h>
@@ -2221,7 +2222,7 @@ static int hdd_ipa_uc_send_evt(hdd_adapter_t *adapter,
 	}
 
 	meta.msg_type = type;
-	strlcpy(msg->name, adapter->dev->name,
+	strscpy(msg->name, adapter->dev->name,
 		IPA_RESOURCE_NAME_MAX);
 	memcpy(msg->mac_addr, mac_addr, ETH_ALEN);
 	HDD_IPA_LOG(VOS_TRACE_LEVEL_INFO, "%s: Evt: %d",
@@ -3905,7 +3906,7 @@ static int hdd_ipa_register_interface(struct hdd_ipa_priv *hdd_ipa,
 #else
 	tx_prop[IPA_IP_v4].dst_pipe = iface_context->cons_client;
 #endif
-	strlcpy(tx_prop[IPA_IP_v4].hdr_name, ipv4_hdr_name,
+	strscpy(tx_prop[IPA_IP_v4].hdr_name, ipv4_hdr_name,
 			IPA_RESOURCE_NAME_MAX);
 	tx_intf.num_props++;
 
@@ -3918,7 +3919,7 @@ static int hdd_ipa_register_interface(struct hdd_ipa_priv *hdd_ipa,
 #else
 		tx_prop[IPA_IP_v6].dst_pipe = iface_context->cons_client;
 #endif
-		strlcpy(tx_prop[IPA_IP_v6].hdr_name, ipv6_hdr_name,
+		strscpy(tx_prop[IPA_IP_v6].hdr_name, ipv6_hdr_name,
 				IPA_RESOURCE_NAME_MAX);
 		tx_intf.num_props++;
 	}
@@ -3942,7 +3943,7 @@ static void hdd_remove_ipa_header(char *name)
 	struct ipa_ioc_del_hdr *ipa_hdr;
 
 	adf_os_mem_zero(&hdrlookup, sizeof(hdrlookup));
-	strlcpy(hdrlookup.name, name, sizeof(hdrlookup.name));
+	strscpy(hdrlookup.name, name, sizeof(hdrlookup.name));
 	ret = ipa_get_hdr(&hdrlookup);
 	if (ret) {
 		HDD_IPA_LOG(VOS_TRACE_LEVEL_INFO, "Hdr deleted already %s, %d",
@@ -4690,7 +4691,7 @@ int hdd_ipa_wlan_evt(hdd_adapter_t *adapter, uint8_t sta_id,
 					"msg_ex allocation failed");
 			return -ENOMEM;
 		}
-		strlcpy(msg_ex->name, adapter->dev->name,
+		strscpy(msg_ex->name, adapter->dev->name,
 				IPA_RESOURCE_NAME_MAX);
 		msg_ex->num_of_attribs = 1;
 		msg_ex->attribs[0].attrib_type = WLAN_HDR_ATTRIB_MAC_ADDR;
@@ -4769,7 +4770,7 @@ int hdd_ipa_wlan_evt(hdd_adapter_t *adapter, uint8_t sta_id,
 	}
 
 	meta.msg_type = type;
-	strlcpy(msg->name, adapter->dev->name, IPA_RESOURCE_NAME_MAX);
+	strscpy(msg->name, adapter->dev->name, IPA_RESOURCE_NAME_MAX);
 	memcpy(msg->mac_addr, mac_addr, ETH_ALEN);
 
 	HDD_IPA_LOG(VOS_TRACE_LEVEL_INFO, "%s: Evt: %d",

@@ -37,6 +37,7 @@
   Include Files
   ------------------------------------------------------------------------*/
 #include <wlan_hdd_includes.h>
+#include "wlan_linux_compat.h"
 #include <vos_api.h>
 #include <vos_sched.h>
 #include <linux/etherdevice.h>

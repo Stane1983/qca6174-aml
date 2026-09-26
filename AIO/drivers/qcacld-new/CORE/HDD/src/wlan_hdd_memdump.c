@@ -34,6 +34,7 @@
  */
 
 #include <sme_Api.h>
+#include "wlan_linux_compat.h"
 #include <wlan_hdd_includes.h>
 #include "wlan_hdd_memdump.h"
 #include "vos_sched.h"

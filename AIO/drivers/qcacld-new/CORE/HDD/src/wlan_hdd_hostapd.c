@@ -104,7 +104,9 @@ extern int process_wma_set_command(int sessid, int paramid,
 #include <vos_utils.h>
 #endif//#ifdef WLAN_FEATURE_SAP_TO_FOLLOW_STA_CHAN
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 41) && defined (CONFIG_AMLOGIC_KERNEL_VERSION))
+/* Amlogic 5.15 kernels carry backported cfg80211 APIs, versioned via this header */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 41) && \
+     LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0) && defined (CONFIG_AMLOGIC_KERNEL_VERSION))
 #include <linux/upstream_version.h>
 #endif
 
@@ -1086,7 +1088,7 @@ static int __hdd_hostapd_set_mac_address(struct net_device *dev, void *addr)
    if (0 != ret)
        return ret;
 
-   memcpy(dev->dev_addr, psta_mac_addr->sa_data, ETH_ALEN);
+   eth_hw_addr_set(dev, psta_mac_addr->sa_data);
    EXIT();
    return 0;
 }
@@ -1508,11 +1510,11 @@ static inline void wlan_cfg80211_ch_switch_notify(struct net_device *dev,
 		(CONFIG_AMLOGIC_KERNEL_VERSION == 13515 && AML_KERNEL_VERSION >= 15)\
 	 || (CONFIG_AMLOGIC_KERNEL_VERSION == 14515 && AML_KERNEL_VERSION >= 12) ) )\
 	 || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0) && LINUX_VERSION_CODE < KERNEL_VERSION(6, 9, 0))
-	 return cfg80211_ch_switch_notify(dev, &chandef, link_id, 0);
+	 return cfg80211_ch_switch_notify(dev, chandef, link_id, 0);
 #elif defined (CFG80211_SINGLE_NETDEV_MULTI_LINK_SUPPORT)
-	 return cfg80211_ch_switch_notify(dev, &chandef, link_id);
+	 return cfg80211_ch_switch_notify(dev, chandef, link_id);
 #else
-	 return cfg80211_ch_switch_notify(dev, &chandef);
+	 return cfg80211_ch_switch_notify(dev, chandef);
 #endif
 }
 
@@ -1523,11 +1525,11 @@ static inline void wlan_cfg80211_ch_switch_started_notify(struct net_device *dev
 		(CONFIG_AMLOGIC_KERNEL_VERSION == 13515 && AML_KERNEL_VERSION >= 15)\
 	 || (CONFIG_AMLOGIC_KERNEL_VERSION == 14515 && AML_KERNEL_VERSION >= 12) ) )\
 	 || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0) && LINUX_VERSION_CODE < KERNEL_VERSION(6, 9, 0))
-	 return cfg80211_ch_switch_started_notify(dev, &chandef, link_id, count, quiet, 0);
+	 return cfg80211_ch_switch_started_notify(dev, chandef, link_id, count, quiet, 0);
 #elif defined (CFG80211_SINGLE_NETDEV_MULTI_LINK_SUPPORT)
-	 return cfg80211_ch_switch_started_notify(dev, &chandef, link_id, count, quiet);
+	 return cfg80211_ch_switch_started_notify(dev, chandef, link_id, count, quiet);
 #else
-	 return cfg80211_ch_switch_started_notify(dev, &chandef, count);
+	 return cfg80211_ch_switch_started_notify(dev, chandef, count);
 #endif
 }
 #endif
@@ -9039,7 +9041,7 @@ hdd_adapter_t* hdd_wlan_create_ap_dev(hdd_context_t *pHddCtx,
                                       (int)vos_get_concurrency_mode());
 
         //Init the net_device structure
-        strlcpy(pWlanHostapdDev->name, (const char *)iface_name, IFNAMSIZ);
+        strscpy(pWlanHostapdDev->name, (const char *)iface_name, IFNAMSIZ);
 
         hdd_set_ap_ops( pHostapdAdapter->dev );
 
@@ -9047,7 +9049,7 @@ hdd_adapter_t* hdd_wlan_create_ap_dev(hdd_context_t *pHddCtx,
         pWlanHostapdDev->mtu = HDD_DEFAULT_MTU;
         pWlanHostapdDev->tx_queue_len = HDD_NETDEV_TX_QUEUE_LEN;
 
-        vos_mem_copy(pWlanHostapdDev->dev_addr, (void *)macAddr,sizeof(tSirMacAddr));
+        eth_hw_addr_set(pWlanHostapdDev, (const u8 *)macAddr);
         vos_mem_copy(pHostapdAdapter->macAddressCurrent.bytes, (void *)macAddr, sizeof(tSirMacAddr));
 
         pHostapdAdapter->offloads_configured = FALSE;

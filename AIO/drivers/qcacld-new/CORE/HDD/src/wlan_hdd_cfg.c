@@ -7449,7 +7449,7 @@ VOS_STATUS hdd_string_to_string_array(char *data, uint8_t *datalist,
         if ('\0' == *str) {
             /* reach the end of string */
             if ('\0' != *field) {
-              strlcpy((char *)(datalist + (num * max_len_entry)),
+              strscpy((char *)(datalist + (num * max_len_entry)),
                       field, max_len_entry);
               num++;
             }
@@ -7457,7 +7457,7 @@ VOS_STATUS hdd_string_to_string_array(char *data, uint8_t *datalist,
         }
         /* replace separator with NUL to terminate the data */
         *str++ = '\0';
-        strlcpy((char *)(datalist + (num * max_len_entry)),
+        strscpy((char *)(datalist + (num * max_len_entry)),
                 field, max_len_entry);
         num++;
     }

@@ -216,7 +216,7 @@ void vos_log_wlock_diag(uint32_t reason, const char *wake_lock_name,
 	wlan_diag_event.reason = reason;
 	wlan_diag_event.timeout = timeout;
 	wlan_diag_event.name_len = strlen(wake_lock_name);
-	strlcpy(&wlan_diag_event.name[0],
+	strscpy(&wlan_diag_event.name[0],
 		wake_lock_name,
 		wlan_diag_event.name_len+1);
 

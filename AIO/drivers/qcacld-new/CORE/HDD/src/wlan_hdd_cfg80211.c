@@ -116,7 +116,11 @@
 
 #include "mdns_offload.h"
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 41))
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+/* cfg80211_assoc_failure() is upstream since 6.0 */
+#define CFG80211_ASSOC_FAILURE
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 41))
+/* Amlogic 5.15 kernels: backported, versioned via upstream_version.h */
 #if (CONFIG_AMLOGIC_KERNEL_VERSION < 14515) // 13515
 #include <linux/upstream_version.h>
 #if AML_KERNEL_VERSION >= 11
@@ -125,9 +129,18 @@
 #else //14515
 #define CFG80211_ASSOC_FAILURE
 #endif // CONFIG_AMLOGIC_KERNEL_VERSION < 14515
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
-#define CFG80211_ASSOC_FAILURE
 #endif  //KERNEL_VERSION
+
+/*
+ * Kbuild sets WLAN_NL80211_TESTMODE from the kernel's CONFIG_NL80211_TESTMODE.
+ * Builds with a flat define list (Bazel/DDK) cannot, so derive it from the
+ * kernel config here: cfg80211_ops.testmode_cmd only exists when it is set.
+ */
+#if defined(CONFIG_NL80211_TESTMODE) && !defined(WLAN_NL80211_TESTMODE)
+#define WLAN_NL80211_TESTMODE
+#elif !defined(CONFIG_NL80211_TESTMODE) && defined(WLAN_NL80211_TESTMODE)
+#undef WLAN_NL80211_TESTMODE
+#endif
 
 #define g_mode_rates_size (12)
 #define a_mode_rates_size (8)
@@ -8280,7 +8293,7 @@ __wlan_hdd_cfg80211_get_wifi_info(struct wiphy *wiphy,
 
 	if (tb_vendor[QCA_WLAN_VENDOR_ATTR_WIFI_INFO_DRIVER_VERSION]) {
 		hddLog(LOG1, FL("Rcvd req for Driver version"));
-		strlcpy(driver_version, QWLAN_VERSIONSTR,
+		strscpy(driver_version, QWLAN_VERSIONSTR,
 			sizeof(driver_version));
 		skb_len += strlen(driver_version) + 1;
 		count++;
@@ -20158,6 +20171,21 @@ static int __wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
  *
  * Return: zero for success non-zero for failure
  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+/* 6.7: change_beacon receives a cfg80211_ap_update wrapping the beacon data */
+static int wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
+					struct net_device *dev,
+					struct cfg80211_ap_update *info)
+{
+	int ret;
+
+	vos_ssr_protect(__func__);
+	ret = __wlan_hdd_cfg80211_change_beacon(wiphy, dev, &info->beacon);
+	vos_ssr_unprotect(__func__);
+
+	return ret;
+}
+#else
 static int wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
 					struct net_device *dev,
 					struct cfg80211_beacon_data *params)
@@ -20170,6 +20198,7 @@ static int wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
 
 	return ret;
 }
+#endif
 
 static int __wlan_hdd_cfg80211_change_bss (struct wiphy *wiphy,
                                       struct net_device *dev,
@@ -20451,11 +20480,15 @@ static int __wlan_hdd_cfg80211_change_iface(struct wiphy *wiphy,
                 (pConfig->apRandomBssidEnabled)) {
                 /* To meet Android requirements create a randomized
                    MAC address of the form 02:1A:11:Fx:xx:xx */
-                get_random_bytes(&ndev->dev_addr[3], 3);
-                ndev->dev_addr[0] = 0x02;
-                ndev->dev_addr[1] = 0x1A;
-                ndev->dev_addr[2] = 0x11;
-                ndev->dev_addr[3] |= 0xF0;
+                /* dev_addr is read-only since 5.17: build it, then set it */
+                u8 rand_bssid[ETH_ALEN];
+
+                get_random_bytes(&rand_bssid[3], 3);
+                rand_bssid[0] = 0x02;
+                rand_bssid[1] = 0x1A;
+                rand_bssid[2] = 0x11;
+                rand_bssid[3] |= 0xF0;
+                eth_hw_addr_set(ndev, rand_bssid);
                 memcpy(pAdapter->macAddressCurrent.bytes, ndev->dev_addr,
                        VOS_MAC_ADDR_SIZE);
                 pr_info("wlan: Generated HotSpot BSSID "MAC_ADDRESS_STR"\n",
@@ -30070,7 +30103,16 @@ static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy,
 					u16 status_code, u32 peer_capability,
 					const u8 *buf, size_t len)
 #else /* TDLS_MGMT_VERSION2 */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)) || defined(WITH_BACKPORTS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+/* 6.5: tdls_mgmt gained an MLO link_id (unused: single-link device) */
+static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy,
+					struct net_device *dev,
+					const u8 *peer, int link_id,
+					u8 action_code,
+					u8 dialog_token, u16 status_code,
+					u32 peer_capability, bool initiator,
+					const u8 *buf, size_t len)
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0)) || defined(WITH_BACKPORTS)
 static int wlan_hdd_cfg80211_tdls_mgmt(struct wiphy *wiphy,
 					struct net_device *dev,
 					const u8 *peer, u8 action_code,
@@ -30651,7 +30693,10 @@ int wlan_hdd_cfg80211_send_tdls_discover_req(struct wiphy *wiphy,
     return wlan_hdd_cfg80211_tdls_mgmt(wiphy, dev, peer,
                             WLAN_TDLS_DISCOVERY_REQUEST, 1, 0, 0, NULL, 0);
 #else
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0)) || defined(WITH_BACKPORTS)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+    return wlan_hdd_cfg80211_tdls_mgmt(wiphy, dev, peer, -1 /* link_id */,
+                            WLAN_TDLS_DISCOVERY_REQUEST, 1, 0, 0, 0, NULL, 0);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3,17,0)) || defined(WITH_BACKPORTS)
     return wlan_hdd_cfg80211_tdls_mgmt(wiphy, dev, peer,
                             WLAN_TDLS_DISCOVERY_REQUEST, 1, 0, 0, 0, NULL, 0);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3,16,0))

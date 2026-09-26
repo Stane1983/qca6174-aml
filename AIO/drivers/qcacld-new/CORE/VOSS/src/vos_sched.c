@@ -44,6 +44,7 @@
  * Include Files
  * ------------------------------------------------------------------------*/
 #include <vos_mq.h>
+#include "wlan_linux_compat.h"
 #include <vos_api.h>
 #include <aniGlobal.h>
 #include <sirTypes.h>

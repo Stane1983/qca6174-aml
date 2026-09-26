@@ -32,7 +32,8 @@
  ******************************************************************************/
 
 #ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
-#include <vmalloc.h>
+#include <linux/vmalloc.h>
+#include "wlan_linux_compat.h"
 #include <wlan_nlink_srv.h>
 #include <vos_status.h>
 #include <vos_trace.h>
@@ -40,7 +41,7 @@
 #include <wlan_logging_sock_svc.h>
 #include <vos_types.h>
 #include <vos_trace.h>
-#include <kthread.h>
+#include <linux/kthread.h>
 #include <adf_os_time.h>
 #include "pktlog_ac.h"
 #include <linux/rtc.h>

@@ -42,6 +42,7 @@
 #define IPV6_MCAST_WAR 1
 
 #include <wlan_hdd_tx_rx.h>
+#include "wlan_linux_compat.h"
 #include <wlan_hdd_softap_tx_rx.h>
 #include <wlan_hdd_dp_utils.h>
 #include <wlan_hdd_tsf.h>

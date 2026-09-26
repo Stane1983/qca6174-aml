@@ -37,7 +37,7 @@
 
 #include <adf_nbuf.h>         /* adf_nbuf_t, etc. */
 #include <ieee80211_common.h>         /* ieee80211_frame */
-#include <net.h>               /* struct llc,struct struct ether_header, etc. */
+#include <linux/net.h>               /* struct llc,struct struct ether_header, etc. */
 #include <ol_txrx_internal.h> /* TXRX_ASSERT1 */
 #include <ol_txrx_types.h>    /* struct ol_txrx_vdev_t,struct ol_txrx_pdev_t,etc. */
 #include <ol_txrx_encap.h>    /* struct ol_rx_decap_info_t*/

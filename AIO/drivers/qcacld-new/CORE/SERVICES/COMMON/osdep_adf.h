@@ -30,6 +30,7 @@
 #define _ATH_LINUX_OSDEP_ADF_H
 
 #include "wlan_opts.h"
+#include <linux/version.h>
 #include <adf_os_mem.h>
 #include <adf_os_lock.h>
 #include <adf_os_time.h>
@@ -161,9 +162,16 @@ static inline void spin_unlock_dpc(spinlock_t *lock)
 typedef unsigned long TQUEUE_ARG;
 #define mark_bh(a)
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
+/* 6.11: proc_handler takes a const struct ctl_table */
+#define ATH_SYSCTL_DECL(f, ctl, write, filp, buffer, lenp, ppos) \
+    f(const struct ctl_table *ctl, int write, void *buffer,             \
+        size_t *lenp, loff_t *ppos)
+#else
 #define ATH_SYSCTL_DECL(f, ctl, write, filp, buffer, lenp, ppos) \
     f(struct ctl_table *ctl, int write, void *buffer,                   \
         size_t *lenp, loff_t *ppos)
+#endif
 #define ATH_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer, lenp, ppos) \
     proc_dointvec(ctl, write, buffer, lenp, ppos)
 #define ATH_SYSCTL_PROC_DOSTRING(ctl, write, filp, buffer, lenp, ppos) \

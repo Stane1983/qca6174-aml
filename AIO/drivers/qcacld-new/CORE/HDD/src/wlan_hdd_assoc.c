@@ -1123,7 +1123,7 @@ void hdd_SendFTEvent(hdd_adapter_t *pAdapter)
     vos_mem_zero(buff, IW_CUSTOM_MAX);
 
     // Sme needs to send the RIC IEs first
-    str_len = strlcpy(buff, "RIC=", IW_CUSTOM_MAX);
+    str_len = strscpy(buff, "RIC=", IW_CUSTOM_MAX);
     sme_GetRICIEs( pHddCtx->hHal, pAdapter->sessionId, (u8 *)&(buff[str_len]),
             (IW_CUSTOM_MAX - str_len), &ric_ies_length );
     if (ric_ies_length == 0)
@@ -1140,7 +1140,7 @@ void hdd_SendFTEvent(hdd_adapter_t *pAdapter)
 
     // Sme needs to provide the Auth Resp
     vos_mem_zero(buff, IW_CUSTOM_MAX);
-    str_len = strlcpy(buff, "AUTH=", IW_CUSTOM_MAX);
+    str_len = strscpy(buff, "AUTH=", IW_CUSTOM_MAX);
     sme_GetFTPreAuthResponse(pHddCtx->hHal, pAdapter->sessionId,
                             (u8 *)&buff[str_len],
                             (IW_CUSTOM_MAX - str_len),
@@ -1235,7 +1235,7 @@ hdd_SendUpdateBeaconIEsEvent(hdd_adapter_t *pAdapter,
     }
     vos_mem_zero(buff, IW_CUSTOM_MAX);
 
-    strLen = strlcpy(buff,"BEACONIEs=", IW_CUSTOM_MAX);
+    strLen = strscpy(buff,"BEACONIEs=", IW_CUSTOM_MAX);
     currentLen = strLen + 1;
 
     totalIeLen = pCsrRoamInfo->nBeaconLength - BEACON_FRAME_IES_OFFSET;
@@ -6475,7 +6475,9 @@ static int __iw_get_ap_address(struct net_device *dev,
     }
     else
     {
-        memset(wrqu->ap_addr.sa_data,0,sizeof(wrqu->ap_addr.sa_data));
+        /* sa_data is a flexible array since 6.2: size it from struct sockaddr */
+        memset(wrqu->ap_addr.sa_data, 0,
+               sizeof(wrqu->ap_addr) - offsetof(struct sockaddr, sa_data));
     }
     EXIT();
     return 0;

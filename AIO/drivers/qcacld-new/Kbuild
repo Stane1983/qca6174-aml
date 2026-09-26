@@ -993,7 +993,8 @@ WDI_INC :=	$(WDI_CP_INC) \
 
 WCNSS_INC :=	-I$(WLAN_ROOT)/wcnss/inc
 
-LINUX_INC :=	-Iinclude/linux
+# Kernel headers are included as <linux/...>; no -Iinclude/linux needed
+LINUX_INC :=
 
 INCS :=		$(HDD_INC) \
 		$(EPPING_INC) \
@@ -1059,7 +1060,11 @@ endif
 
 EXTRA_CFLAGS += $(INCS)
 EXTRA_CFLAGS += -w
-EXTRA_CFLAGS += -I$(KERNEL_SRC)/include/linux
+# Kernels >= 6.5 build with -fstrict-flex-arrays=3; with UBSAN_BOUNDS + UBSAN_TRAP
+# (Android GKI) any access past a legacy [0]/[1] trailing array then traps.
+# This driver (and its firmware message ABI) relies on such arrays, so keep
+# the pre-6.5 semantics where every trailing array is treated as flexible.
+EXTRA_CFLAGS += $(call cc-option,-fstrict-flex-arrays=0)
 EXTRA_CFLAGS += -Wno-shift-count-negative
 EXTRA_CFLAGS += -Wno-shift-count-overflow
 EXTRA_CFLAGS += -Wno-enum-conversion

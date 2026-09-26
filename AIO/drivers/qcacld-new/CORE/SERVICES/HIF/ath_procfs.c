@@ -28,6 +28,7 @@
 
 #if defined(CONFIG_ATH_PROCFS_DIAG_SUPPORT)
 #include <linux/module.h>	/* Specifically, a module */
+#include "wlan_linux_compat.h"
 #include <linux/kernel.h>	/* We're doing kernel work */
 #include <linux/version.h>	/* We're doing kernel work */
 #include <linux/proc_fs.h>	/* Necessary because we use the proc fs */

@@ -113,7 +113,7 @@ ol_tx_ll_queue(ol_txrx_vdev_handle vdev, adf_nbuf_t msdu_list);
 adf_os_enum_hrtimer_t
 ol_tx_hl_vdev_tcp_del_ack_timer(adf_os_hrtimer_t *timer);
 
-void tcp_del_ack_tasklet(unsigned long data);
+void tcp_del_ack_tasklet(void *data);
 
 void ol_tx_hl_del_ack_queue_flush_all(struct ol_txrx_vdev_t *vdev);
 #else

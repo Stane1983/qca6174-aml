@@ -27,6 +27,7 @@
  */
 
 #include <linux/firmware.h>
+#include "wlan_linux_compat.h"
 #include <linux/pm_qos.h>
 #include "ol_if_athvar.h"
 #include "ol_fw.h"

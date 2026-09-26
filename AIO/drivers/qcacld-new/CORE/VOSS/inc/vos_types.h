@@ -41,7 +41,7 @@
   Include Files
   ------------------------------------------------------------------------*/
 #include "i_vos_types.h"
-#include <string.h>
+#include <linux/string.h>
 
 /*--------------------------------------------------------------------------
   Preprocessor definitions and constants

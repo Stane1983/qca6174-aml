@@ -10812,7 +10812,7 @@ static int __hdd_set_mac_address(struct net_device *dev, void *addr)
 		return ret;
 
 	memcpy(&pAdapter->macAddressCurrent, psta_mac_addr->sa_data, ETH_ALEN);
-	memcpy(dev->dev_addr, psta_mac_addr->sa_data, ETH_ALEN);
+	eth_hw_addr_set(dev, psta_mac_addr->sa_data);
 
 	EXIT();
 	return 0;
@@ -11221,7 +11221,7 @@ hdd_alloc_p2p_device_adapter(hdd_context_t *pHddCtx, tSirMacAddr macAddr,
 		     sizeof(tSirMacAddr));
 	vos_mem_copy(pAdapter->wdev.address, macAddr, sizeof(tSirMacAddr));
 
-	strlcpy(pAdapter->ifname, name, IFNAMSIZ);
+	strscpy(pAdapter->ifname, name, IFNAMSIZ);
 	/*
 	* kernel will consume ethernet header length buffer for hard_header,
 	* so just reserve it
@@ -11277,13 +11277,13 @@ static hdd_adapter_t* hdd_alloc_station_adapter(hdd_context_t *pHddCtx,
       pAdapter->isLinkUpSvcNeeded = FALSE;
       pAdapter->higherDtimTransition = eANI_BOOLEAN_TRUE;
       //Init the net_device structure
-      strlcpy(pWlanDev->name, name, IFNAMSIZ);
+      strscpy(pWlanDev->name, name, IFNAMSIZ);
 
 #ifdef SUPPORT_IFTYPE_P2P_DEVICE_VIF
-      strlcpy(pAdapter->ifname, name, IFNAMSIZ);
+      strscpy(pAdapter->ifname, name, IFNAMSIZ);
 #endif
 
-      vos_mem_copy(pWlanDev->dev_addr, (void *)macAddr, sizeof(tSirMacAddr));
+      eth_hw_addr_set(pWlanDev, (const u8 *)macAddr);
       vos_mem_copy( pAdapter->macAddressCurrent.bytes, macAddr, sizeof(tSirMacAddr));
       pWlanDev->watchdog_timeo = HDD_TX_TIMEOUT;
       /*
@@ -11352,10 +11352,9 @@ static hdd_adapter_t *hdd_alloc_monitor_adapter(hdd_context_t *pHddCtx,
 	   pAdapter->isLinkUpSvcNeeded = FALSE;
 	   pAdapter->higherDtimTransition = eANI_BOOLEAN_TRUE;
 	   /* Init the net_device structure */
-	   strlcpy(pwlan_dev->name, name, IFNAMSIZ);
+	   strscpy(pwlan_dev->name, name, IFNAMSIZ);
 
-	   vos_mem_copy(pwlan_dev->dev_addr,
-			(void *)macAddr, sizeof(tSirMacAddr));
+	   eth_hw_addr_set(pwlan_dev, (const u8 *)macAddr);
 	   vos_mem_copy(pAdapter->macAddressCurrent.bytes,
 			macAddr, sizeof(tSirMacAddr));
 	   pwlan_dev->watchdog_timeo = HDD_TX_TIMEOUT;
@@ -15902,7 +15901,7 @@ static void hdd_set_ixc_prio(void *priv)
             task = get_pid_task(pid, 0);
             if(task){
                 memset(comm, 0, sizeof(comm));
-                strlcpy(comm, task->comm, sizeof(comm));
+                strscpy(comm, task->comm, sizeof(comm));
                 if(strstr(comm, "ixchariot") || strstr(comm, "iperf")) {
                     vos_timer_start(&pHddCtx->set_ixc_prio_timer, 10);
                     //we already set this task priority
@@ -15918,7 +15917,7 @@ static void hdd_set_ixc_prio(void *priv)
             task = get_pid_task(pid, 0);
             if(task){
                 memset(comm, 0, sizeof(comm));
-                strlcpy(comm, task->comm, sizeof(comm));
+                strscpy(comm, task->comm, sizeof(comm));
                 if(strstr(comm, "ixchariot") || strstr(comm, "iperf")) {
                     sched_setscheduler(task, SCHED_FIFO, &param);
 #ifdef CONFIG_PERF_MODE
@@ -18938,7 +18937,7 @@ static int fwpath_changed_handler(const char *kmessage,
 		pr_info("%s : new_mode : %s, present_mode : %s\n", __func__,
 			kmessage, fwpath_mode_local);
 
-		strlcpy(fwpath_mode_local, kmessage,
+		strscpy(fwpath_mode_local, kmessage,
 			sizeof(fwpath_mode_local));
 
 		ready = vos_is_load_unload_ready(__func__);
@@ -19910,12 +19909,12 @@ int wlan_hdd_gen_wlan_version_pack(struct wlan_version_data *data,
     }
 
     data->chip_id = chip_id;
-    strlcpy(data->chip_name, chip_name, WLAN_SVC_MAX_STR_LEN);
+    strscpy(data->chip_name, chip_name, WLAN_SVC_MAX_STR_LEN);
     if (strncmp(chip_name, "Unknown", 7))
-        strlcpy(data->chip_from, "Qualcomm", WLAN_SVC_MAX_STR_LEN);
+        strscpy(data->chip_from, "Qualcomm", WLAN_SVC_MAX_STR_LEN);
     else
-        strlcpy(data->chip_from, "Unknown", WLAN_SVC_MAX_STR_LEN);
-    strlcpy(data->host_version, QWLAN_VERSIONSTR, WLAN_SVC_MAX_STR_LEN);
+        strscpy(data->chip_from, "Unknown", WLAN_SVC_MAX_STR_LEN);
+    strscpy(data->host_version, QWLAN_VERSIONSTR, WLAN_SVC_MAX_STR_LEN);
     scnprintf(data->fw_version, WLAN_SVC_MAX_STR_LEN, "%d.%d.%d.%d",
               (fw_version & 0xf0000000) >> 28,
               (fw_version & 0xf000000) >> 24,

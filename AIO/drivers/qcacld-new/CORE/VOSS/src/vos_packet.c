@@ -359,7 +359,7 @@ void vos_pkt_trace_buf_update
 #else
    trace_buffer[slot].event_msec_time = tv.tv_usec;
 #endif
-   strlcpy(trace_buffer[slot].event_string, event_string,
+   strscpy(trace_buffer[slot].event_string, event_string,
           sizeof(trace_buffer[slot].event_string));
 
    return;

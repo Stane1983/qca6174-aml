@@ -80,7 +80,7 @@ MODULE_IMPORT_NS(CRYPTO_INTERNAL);
 #ifdef CONFIG_CNSS
 #include <linux/qcomwlan_secif.h>
 #endif
-#include <errno.h>
+#include <linux/errno.h>
 
 #include "ieee80211_common.h"
 /*----------------------------------------------------------------------------
@@ -650,9 +650,16 @@ struct hmac_sha1_result {
     int err;
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+/* 6.3: crypto_completion_t takes the callback data pointer directly */
+static void hmac_sha1_complete(void *data, int err)
+{
+    struct hmac_sha1_result *r = data;
+#else
 static void hmac_sha1_complete(struct crypto_async_request *req, int err)
 {
     struct hmac_sha1_result *r = req->data;
+#endif
     if (err == -EINPROGRESS)
         return;
     r->err = err;
@@ -677,11 +684,9 @@ int hmac_sha1(v_U8_t *key, v_U8_t ksize, char *plaintext, v_U8_t psize,
     init_completion(&tresult.completion);
 
 #if  !defined(CONFIG_CNSS) && (defined(HIF_USB) || defined(HIF_SDIO) || defined(CONFIG_NON_QC_PLATFORM_PCI))
-    tfm = crypto_alloc_ahash("hmac(sha1)", CRYPTO_ALG_TYPE_AHASH,
-                                        CRYPTO_ALG_TYPE_AHASH_MASK);
+    tfm = crypto_alloc_ahash("hmac(sha1)", 0, 0);
 #else
-    tfm = wcnss_wlan_crypto_alloc_ahash("hmac(sha1)", CRYPTO_ALG_TYPE_AHASH,
-                                        CRYPTO_ALG_TYPE_AHASH_MASK);
+    tfm = wcnss_wlan_crypto_alloc_ahash("hmac(sha1)", 0, 0);
 #endif
     if (IS_ERR(tfm)) {
         VOS_TRACE(VOS_MODULE_ID_VOSS,VOS_TRACE_LEVEL_ERROR, "crypto_alloc_ahash failed");
@@ -823,9 +828,16 @@ struct hmac_md5_result {
     int err;
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+/* 6.3: crypto_completion_t takes the callback data pointer directly */
+static void hmac_md5_complete(void *data, int err)
+{
+    struct hmac_md5_result *r = data;
+#else
 static void hmac_md5_complete(struct crypto_async_request *req, int err)
 {
     struct hmac_md5_result *r = req->data;
+#endif
     if (err == -EINPROGRESS)
             return;
     r->err = err;
@@ -850,11 +862,9 @@ int hmac_md5(v_U8_t *key, v_U8_t ksize, char *plaintext, v_U8_t psize,
     init_completion(&tresult.completion);
 
 #if  !defined(CONFIG_CNSS) && (defined(HIF_USB) || defined(HIF_SDIO) || defined(CONFIG_NON_QC_PLATFORM_PCI))
-    tfm = crypto_alloc_ahash("hmac(md5)", CRYPTO_ALG_TYPE_AHASH,
-                                        CRYPTO_ALG_TYPE_AHASH_MASK);
+    tfm = crypto_alloc_ahash("hmac(md5)", 0, 0);
 #else
-    tfm = wcnss_wlan_crypto_alloc_ahash("hmac(md5)", CRYPTO_ALG_TYPE_AHASH,
-                                        CRYPTO_ALG_TYPE_AHASH_MASK);
+    tfm = wcnss_wlan_crypto_alloc_ahash("hmac(md5)", 0, 0);
 #endif
     if (IS_ERR(tfm)) {
         VOS_TRACE(VOS_MODULE_ID_VOSS,VOS_TRACE_LEVEL_ERROR, "crypto_alloc_ahash failed");

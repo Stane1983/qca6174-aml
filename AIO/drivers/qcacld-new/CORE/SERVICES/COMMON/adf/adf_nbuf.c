@@ -445,7 +445,7 @@ adf_nbuf_history_add(adf_nbuf_t nbuf, const char *file, uint32_t line,
 	struct adf_nbuf_event *event = &adf_nbuf_history[idx];
 
 	event->nbuf = nbuf;
-	strlcpy(event->file, kbasename(file), ADF_MEM_FILE_NAME_SIZE);
+	strscpy(event->file, kbasename(file), ADF_MEM_FILE_NAME_SIZE);
 	event->line = line;
 	event->type = type;
 	event->timestamp = adf_os_ticks();
@@ -723,7 +723,7 @@ adf_nbuf_track_map(adf_nbuf_t nbuf, const char *file, uint32_t line)
 	}
 
 	meta->nbuf = nbuf;
-	strlcpy(meta->file, kbasename(file), ADF_MEM_FILE_NAME_SIZE);
+	strscpy(meta->file, kbasename(file), ADF_MEM_FILE_NAME_SIZE);
 	meta->line = line;
 
 	adf_os_spin_lock_irqsave(&adf_nbuf_map_lock);

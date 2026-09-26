@@ -37,6 +37,7 @@
  * Linux specific implementation of Pktlogs for 802.11ac
  */
 #include <linux/kernel.h>
+#include "wlan_linux_compat.h"
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/vmalloc.h>
@@ -236,6 +237,8 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_enable, ctl, write, filp, buffer, lenp,
 	int ret, enable;
 	ol_ath_generic_softc_handle scn;
 	struct ol_pktlog_dev_t *pl_dev;
+	/* work on a copy: the table may be const (6.11+) and shared */
+	struct ctl_table tmp_ctl;
 
 	mutex_lock(&proc_mutex);
 	scn = (ol_ath_generic_softc_handle) ctl->extra1;
@@ -256,11 +259,12 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_enable, ctl, write, filp, buffer, lenp,
 		return -ENODEV;
 	}
 
-	ctl->data = &enable;
-	ctl->maxlen = sizeof(enable);
+	tmp_ctl = *ctl;
+	tmp_ctl.data = &enable;
+	tmp_ctl.maxlen = sizeof(enable);
 
 	if (write) {
-		ret = ATH_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer,
+		ret = ATH_SYSCTL_PROC_DOINTVEC(&tmp_ctl, write, filp, buffer,
 					       lenp, ppos);
 		if (ret == 0)
 			ret = pl_dev->pl_funcs->pktlog_enable(
@@ -270,15 +274,12 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_enable, ctl, write, filp, buffer, lenp,
 			printk(PKTLOG_TAG "%s:proc_dointvec failed\n",
 			       __func__);
 	} else {
-		ret = ATH_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer,
+		ret = ATH_SYSCTL_PROC_DOINTVEC(&tmp_ctl, write, filp, buffer,
 					       lenp, ppos);
 		if (ret)
 			printk(PKTLOG_TAG "%s:proc_dointvec failed\n",
 			       __func__);
 	}
-
-	ctl->data = NULL;
-	ctl->maxlen = 0;
 
 	mutex_unlock(&proc_mutex);
 	return ret;
@@ -297,6 +298,8 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_size, ctl, write, filp, buffer, lenp,
 	int ret, size;
 	ol_ath_generic_softc_handle scn;
 	struct ol_pktlog_dev_t *pl_dev;
+	/* work on a copy: the table may be const (6.11+) and shared */
+	struct ctl_table tmp_ctl;
 
 	mutex_lock(&proc_mutex);
 	scn = (ol_ath_generic_softc_handle) ctl->extra1;
@@ -317,11 +320,12 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_size, ctl, write, filp, buffer, lenp,
 		return -ENODEV;
 	}
 
-	ctl->data = &size;
-	ctl->maxlen = sizeof(size);
+	tmp_ctl = *ctl;
+	tmp_ctl.data = &size;
+	tmp_ctl.maxlen = sizeof(size);
 
 	if (write) {
-		ret = ATH_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer,
+		ret = ATH_SYSCTL_PROC_DOINTVEC(&tmp_ctl, write, filp, buffer,
 					       lenp, ppos);
 		if (ret == 0)
 			ret = pl_dev->pl_funcs->pktlog_setsize(
@@ -329,12 +333,9 @@ ATH_SYSCTL_DECL(ath_sysctl_pktlog_size, ctl, write, filp, buffer, lenp,
 						size);
 	} else {
 		size = get_pktlog_bufsize(pl_dev);
-		ret = ATH_SYSCTL_PROC_DOINTVEC(ctl, write, filp, buffer,
+		ret = ATH_SYSCTL_PROC_DOINTVEC(&tmp_ctl, write, filp, buffer,
 					       lenp, ppos);
 	}
-
-	ctl->data = NULL;
-	ctl->maxlen = 0;
 
 	mutex_unlock(&proc_mutex);
 	return ret;
@@ -371,12 +372,16 @@ static int pktlog_sysctl_register(struct ol_softc *scn)
 	set_ctl_name(0, CTL_AUTO);
 	pl_info_lnx->sysctls[0].procname = PKTLOG_PROC_DIR;
 	pl_info_lnx->sysctls[0].mode = PKTLOG_PROCSYS_DIR_PERM;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	pl_info_lnx->sysctls[0].child = &pl_info_lnx->sysctls[2];
+#endif
 	/* [1] is NULL terminator */
 	set_ctl_name(2, CTL_AUTO);
 	pl_info_lnx->sysctls[2].procname = proc_name;
 	pl_info_lnx->sysctls[2].mode = PKTLOG_PROCSYS_DIR_PERM;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	pl_info_lnx->sysctls[2].child = &pl_info_lnx->sysctls[4];
+#endif
 	/* [3] is NULL terminator */
 	set_ctl_name(4, CTL_AUTO);
 	pl_info_lnx->sysctls[4].procname = "enable";
@@ -445,7 +450,21 @@ static int pktlog_sysctl_register(struct ol_softc *scn)
 
 	/* and register everything */
 	/* register_sysctl_table changed from 2.6.21 onwards */
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+	/*
+	 * 6.6: nested (->child) tables and register_sysctl_table() are gone.
+	 * Register the leaf entries [4..12] directly under
+	 * PKTLOG_PROC_DIR/<proc_name>; the directories are created for us.
+	 */
+	{
+		char path[64];
+
+		snprintf(path, sizeof(path), "%s/%s", PKTLOG_PROC_DIR,
+			 proc_name);
+		pl_info_lnx->sysctl_header =
+			register_sysctl_sz(path, &pl_info_lnx->sysctls[4], 9);
+	}
+#elif (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20))
 	pl_info_lnx->sysctl_header =
 			register_sysctl_table(pl_info_lnx->sysctls);
 #else

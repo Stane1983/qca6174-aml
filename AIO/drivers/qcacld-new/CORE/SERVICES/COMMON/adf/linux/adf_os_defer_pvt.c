@@ -56,3 +56,16 @@ __adf_os_defer_delayed_func(struct work_struct *dwork)
     }
     ctx->fn(ctx->arg);
 }
+
+void
+__adf_os_bh_func(unsigned long data)
+{
+    __adf_os_bh_t *ctx = (__adf_os_bh_t *)data;
+
+    if (ctx->fn == NULL)
+    {
+        printk("BugCheck: Callback is not initilized while creating bh\n");
+        return;
+    }
+    ctx->fn(ctx->arg);
+}

@@ -35,7 +35,16 @@
 #include "vos_cnss.h"
 #include <adf_os_types.h>
 
-typedef struct tasklet_struct  __adf_os_bh_t;
+/*
+ * Bottom half: wrap the tasklet so the (void *) callback is invoked through a
+ * correctly-typed trampoline. Casting it straight to a tasklet function
+ * (void (*)(unsigned long)) breaks kCFI (CONFIG_CFI_CLANG, enabled in GKI).
+ */
+typedef struct {
+    struct tasklet_struct tasklet;
+    adf_os_defer_fn_t     fn;
+    void                  *arg;
+} __adf_os_bh_t;
 typedef struct workqueue_struct __adf_os_workqueue_t;
 
 /**
@@ -55,8 +64,7 @@ typedef struct {
 
 extern void __adf_os_defer_func(struct work_struct *work);
 extern void __adf_os_defer_delayed_func(struct work_struct *work);
-
-typedef void (*__adf_os_bh_fn_t)(unsigned long arg);
+extern void __adf_os_bh_func(unsigned long data);
 
 static inline a_status_t
 __adf_os_init_work(adf_os_handle_t    hdl,
@@ -110,11 +118,13 @@ static inline void __adf_os_destroy_workqueue(adf_os_handle_t hdl, __adf_os_work
 }
 
 static inline  a_status_t __adf_os_init_bh(adf_os_handle_t  hdl,
-                                     struct tasklet_struct *bh,
+                                     __adf_os_bh_t     *bh,
                                      adf_os_defer_fn_t  func,
                                      void               *arg)
 {
-     tasklet_init(bh, (__adf_os_bh_fn_t)func, (unsigned long)arg);
+     bh->fn = func;
+     bh->arg = arg;
+     tasklet_init(&bh->tasklet, __adf_os_bh_func, (unsigned long)bh);
 
      return A_STATUS_OK;
 }
@@ -127,9 +137,9 @@ __adf_os_sched_work(adf_os_handle_t hdl, __adf_os_work_t  * work)
 }
 
 static inline a_status_t  __adf_os_sched_bh(adf_os_handle_t hdl,
-                                     struct tasklet_struct * bh)
+                                     __adf_os_bh_t *bh)
 {
-    tasklet_schedule(bh);
+    tasklet_schedule(&bh->tasklet);
 
     return A_STATUS_OK;
 }
@@ -143,9 +153,9 @@ __adf_os_disable_work(adf_os_handle_t hdl, __adf_os_work_t  * work)
     return A_STATUS_OK;
 }
 static inline a_status_t
-__adf_os_disable_bh(adf_os_handle_t hdl, struct tasklet_struct *bh)
+__adf_os_disable_bh(adf_os_handle_t hdl, __adf_os_bh_t *bh)
 {
-    tasklet_kill(bh);
+    tasklet_kill(&bh->tasklet);
 
     return A_STATUS_OK;
 }
